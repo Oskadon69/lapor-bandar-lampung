@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  WARGA
+  PETUGAS_OPD
+  ADMIN_PEMDA
+  PIMPINAN
+}
+
+enum StatusPengaduan {
+  BARU
+  DIVERIFIKASI
+  DIPROSES
+  SELESAI
+  DITOLAK
+}
+
+enum Prioritas {
+  RENDAH
+  SEDANG
+  TINGGI
+  DARURAT
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String
+  email         String          @unique
+  password      String
+  role          Role            @default(WARGA)
+  phone         String?
+  address       String?
+  nik           String?         @unique
+  opd           OPD?            @relation(fields: [opdId], references: [id])
+  opdId         String?
+  pengaduan     Pengaduan[]     @relation("UserPengaduan")
+  assigned      Pengaduan[]     @relation("PetugasPengaduan")
+  statusHistory StatusHistory[]
+  komentar      Komentar[]
+  notifikasi    Notifikasi[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model OPD {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  contact     String?
+  email       String?
+  kategori    Kategori[]
+  pengaduan   Pengaduan[]
+  users       User[]
+  createdAt   DateTime    @default(now())
+}
+
+model Kategori {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  icon        String?
+  opd         OPD         @relation(fields: [opdId], references: [id])
+  opdId       String
+  pengaduan   Pengaduan[]
+  createdAt   DateTime    @default(now())
+}
+
+model Pengaduan {
+  id             String          @id @default(cuid())
+  noLaporan      String          @unique
+  judul          String
+  deskripsi      String
+  kategori       Kategori        @relation(fields: [kategoriId], references: [id])
+  kategoriId     String
+  pelapor        User            @relation("UserPengaduan", fields: [pelaporId], references: [id])
+  pelaporId      String
+  petugas        User?           @relation("PetugasPengaduan", fields: [petugasId], references: [id])
+  petugasId      String?
+  opd            OPD?            @relation(fields: [opdId], references: [id])
+  opdId          String?
+  status         StatusPengaduan @default(BARU)
+  prioritas      Prioritas       @default(SEDANG)
+  fotoUrl        String[]
+  latitude       Float?
+  longitude      Float?
+  alamatKejadian String
+  catatan        String?
+  deadline       DateTime?
+  statusHistory  StatusHistory[]
+  komentar       Komentar[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model StatusHistory {
+  id          String           @id @default(cuid())
+  pengaduan   Pengaduan        @relation(fields: [pengaduanId], references: [id])
+  pengaduanId String
+  statusLama  StatusPengaduan?
+  statusBaru  StatusPengaduan
+  catatan     String?
+  petugas     User?            @relation(fields: [petugasId], references: [id])
+  petugasId   String?
+  createdAt   DateTime         @default(now())
+}
+
+model Komentar {
+  id          String    @id @default(cuid())
+  pengaduan   Pengaduan @relation(fields: [pengaduanId], references: [id])
+  pengaduanId String
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  isi         String
+  createdAt   DateTime  @default(now())
+}
+
+model Notifikasi {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  judul     String
+  pesan     String
+  dibaca    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
