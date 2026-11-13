@@ -53,6 +53,26 @@ export const statusLabel: Record<string, string> = {
 /**
  * Map status to Tailwind color class
  */
+export function formatStatus(status: string): string {
+  return statusLabel[status] || status;
+}
+
+export function getStatusColor(status: string): string {
+  return statusColor[status] || "bg-slate-100 text-slate-800 border-slate-200";
+}
+
+export function getStatusDotColor(status: string): string {
+  const dotColors: Record<string, string> = {
+    BARU: "bg-blue-500",
+    VERIFIKASI: "bg-indigo-500",
+    DIVERIFIKASI: "bg-yellow-500",
+    DIPROSES: "bg-amber-500",
+    SELESAI: "bg-emerald-500",
+    DITOLAK: "bg-red-500",
+  };
+  return dotColors[status] || "bg-slate-400";
+}
+
 export const statusColor: Record<string, string> = {
   BARU: "bg-blue-100 text-blue-800",
   DIVERIFIKASI: "bg-yellow-100 text-yellow-800",
